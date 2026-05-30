@@ -1,0 +1,81 @@
+name: 🖥️ Cat IDE CI
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  syntax-check:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Скачиваем код
+      uses: actions/checkout@v4
+    - name: Устанавливаем Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Устанавливаем зависимости
+      shell: bash
+      run: |
+        pip install customtkinter
+    - name: Проверяем, что Python-файл валидный
+      shell: bash
+      run: |
+        python -m py_compile cat_ide.py && echo "OK: синтаксис корректен"
+
+  build-exe:
+    needs: syntax-check
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Устанавливаем Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Устанавливаем зависимости
+      run: |
+        pip install customtkinter pyinstaller
+      
+    - name: Собираем бинарник
+      shell: bash
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          pyinstaller --onefile --name "Cat_IDE_Windows" cat_ide.py
+          echo "ASSET_NAME=Cat_IDE_Windows.exe" >> $GITHUB_ENV
+        elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+          pyinstaller --onefile --name "Cat_IDE_macOS" cat_ide.py
+          echo "ASSET_NAME=Cat_IDE_macOS" >> $GITHUB_ENV
+        else
+          pyinstaller --onefile --name "Cat_IDE_Linux" cat_ide.py
+          echo "ASSET_NAME=Cat_IDE_Linux" >> $GITHUB_ENV
+        fi
+
+    - name: Подготовить бинарник к релизу (убираем .zip)
+      shell: bash
+      run: |
+        mkdir -p release_assets
+        cp dist/* release_assets/
+        echo "ASSET_FILE=release_assets/$(ls release_assets)" >> $GITHUB_ENV
+
+    - name: Загружаем результат в Релиз
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        files: release_assets/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
