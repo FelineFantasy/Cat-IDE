@@ -5,9 +5,9 @@ from tkinter import scrolledtext, filedialog, Menu, messagebox
 import subprocess
 import customtkinter as ctk
 import shutil
+import threading
 
 def find_python():
-    """Находит настоящий python.exe, чтобы не запускать самого себя."""
     python = shutil.which("python")
     if python:
         return python
@@ -24,6 +24,24 @@ def find_python():
 
     return sys.executable
 
+AUTO_SAVE_INTERVAL = 5
+auto_save_timer = None
+needs_saving = False
+
+def mark_dirty(event=None):
+    global needs_saving
+    needs_saving = True
+
+def auto_save():
+    global auto_save_timer, needs_saving
+    
+    if needs_saving:
+        save()
+        needs_saving = False
+    
+    auto_save_timer = threading.Timer(AUTO_SAVE_INTERVAL, auto_save)
+    auto_save_timer.daemon = True
+    auto_save_timer.start()
 
 def save(event=None):
     if hasattr(save, 'current_file') and save.current_file:
@@ -32,7 +50,6 @@ def save(event=None):
     else:
         with open("temp_code.py", "w", encoding="utf-8") as f:
             f.write(text.get("1.0", ctk.END))
-
 
 def open_file():
     file_path = filedialog.askopenfilename(
@@ -47,7 +64,6 @@ def open_file():
         save.current_file = file_path
         root.title(f"Cat IDE - {file_path}")
 
-
 def new_file():
     file_path = filedialog.asksaveasfilename(
         title="Создать новый .py файл",
@@ -61,7 +77,6 @@ def new_file():
         save.current_file = file_path
         root.title(f"Cat IDE - {file_path}")
         messagebox.showinfo("Успех", f"Создан файл: {file_path}")
-
 
 def run():
     save()
@@ -87,13 +102,20 @@ def run():
             f'x-terminal-emulator -e bash -c "{python} {file_to_run}; echo -n \'Done! Press Enter to exit...\'; read"',
             shell=True)
 
-
 def show_menu(event):
     menu = Menu(root, tearoff=0)
     menu.add_command(label="Создать новый .py файл", command=new_file)
     menu.add_separator()
     menu.add_command(label="Открыть .py файл", command=open_file)
     menu.post(event.x_root, event.y_root)
+
+def on_close():
+    global auto_save_timer
+    if auto_save_timer:
+        auto_save_timer.cancel()
+    if needs_saving:
+        save()
+    root.destroy()
 
 root = ctk.CTk()
 root.title("Cat IDE")
@@ -118,7 +140,14 @@ text.bind("<Button-3>", show_menu)
 root.bind("<F5>", lambda event: run())
 root.bind("<Control-s>", lambda event: save())
 root.bind("<Control-n>", lambda event: new_file())
-text.bind("<KeyRelease>", lambda event: save())
+
+text.bind("<KeyRelease>", mark_dirty)
+
+auto_save_timer = threading.Timer(AUTO_SAVE_INTERVAL, auto_save)
+auto_save_timer.daemon = True
+auto_save_timer.start()
+
+root.protocol("WM_DELETE_WINDOW", on_close)
 
 save.current_file = None
 
