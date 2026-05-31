@@ -7,6 +7,31 @@ import customtkinter as ctk
 import shutil
 import threading
 
+def set_hidden_file(filepath):
+    """Сделать файл скрытым в зависимости от ОС"""
+    if platform.system() == "Windows":
+        os.system(f'attrib +h "{filepath}"')
+    else:
+        dirname = os.path.dirname(filepath)
+        basename = os.path.basename(filepath)
+        if not basename.startswith('.'):
+            hidden_path = os.path.join(dirname, '.' + basename)
+            if os.path.exists(filepath):
+                os.rename(filepath, hidden_path)
+                return hidden_path
+    return filepath
+
+def get_temp_file_path():
+    """Получить путь к скрытому временному файлу"""
+    temp_file = "temp_code.py"
+    if platform.system() != "Windows":
+        temp_file = ".temp_code.py"
+    
+    if platform.system() == "Windows" and os.path.exists(temp_file):
+        set_hidden_file(temp_file)
+    
+    return temp_file
+
 def find_python():
     python = shutil.which("python")
     if python:
@@ -44,12 +69,15 @@ def auto_save():
     auto_save_timer.start()
 
 def save(event=None):
+    temp_file = get_temp_file_path()
+    
     if hasattr(save, 'current_file') and save.current_file:
         with open(save.current_file, "w", encoding="utf-8") as f:
             f.write(text.get("1.0", ctk.END))
     else:
-        with open("temp_code.py", "w", encoding="utf-8") as f:
+        with open(temp_file, "w", encoding="utf-8") as f:
             f.write(text.get("1.0", ctk.END))
+        set_hidden_file(temp_file)
 
 def open_file():
     file_path = filedialog.askopenfilename(
@@ -84,7 +112,7 @@ def run():
     if hasattr(save, 'current_file') and save.current_file:
         file_to_run = save.current_file
     else:
-        file_to_run = "temp_code.py"
+        file_to_run = get_temp_file_path()
 
     python = find_python()
     system = platform.system()
