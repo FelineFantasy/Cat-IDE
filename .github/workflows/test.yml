@@ -55,13 +55,13 @@ jobs:
       shell: bash
       run: |
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          pyinstaller --onefile --name "Cat_IDE_Windows" cat_ide.py
+          pyinstaller --onefile --noconsole --name "Cat_IDE_Windows" cat_ide.py
           echo "ASSET_NAME=Cat_IDE_Windows.exe" >> $GITHUB_ENV
         elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-          pyinstaller --onefile --name "Cat_IDE_macOS" cat_ide.py
+          pyinstaller --onefile --noconsole --name "Cat_IDE_macOS" cat_ide.py
           echo "ASSET_NAME=Cat_IDE_macOS" >> $GITHUB_ENV
         else
-          pyinstaller --onefile --name "Cat_IDE_Linux" cat_ide.py
+          pyinstaller --onefile --noconsole --name "Cat_IDE_Linux" cat_ide.py
           echo "ASSET_NAME=Cat_IDE_Linux" >> $GITHUB_ENV
         fi
 
