@@ -65,17 +65,10 @@ jobs:
           echo "ASSET_NAME=Cat_IDE_Linux" >> $GITHUB_ENV
         fi
 
-    - name: Подготовить бинарник к релизу (убираем .zip)
-      shell: bash
-      run: |
-        mkdir -p release_assets
-        cp -r dist/* release_assets/
-        echo "ASSET_FILE=release_assets/$(ls release_assets)" >> $GITHUB_ENV
-
     - name: Загружаем результат в Релиз
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.ref_name }}
-        files: release_assets/*
+        files: dist/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
