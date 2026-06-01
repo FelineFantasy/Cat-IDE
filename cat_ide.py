@@ -1,36 +1,19 @@
-import sys
 import os
 import platform
-from tkinter import scrolledtext, filedialog, Menu, messagebox
-import subprocess
-import customtkinter as ctk
 import shutil
+import subprocess
+import sys
+import tempfile
 import threading
+from tkinter import Menu, filedialog, messagebox, scrolledtext
 
-def set_hidden_file(filepath):
-    """Сделать файл скрытым в зависимости от ОС"""
-    if platform.system() == "Windows":
-        os.system(f'attrib +h "{filepath}"')
-    else:
-        dirname = os.path.dirname(filepath)
-        basename = os.path.basename(filepath)
-        if not basename.startswith('.'):
-            hidden_path = os.path.join(dirname, '.' + basename)
-            if os.path.exists(filepath):
-                os.rename(filepath, hidden_path)
-                return hidden_path
-    return filepath
+import customtkinter as ctk
+
 
 def get_temp_file_path():
-    """Получить путь к скрытому временному файлу"""
-    temp_file = "temp_code.py"
-    if platform.system() != "Windows":
-        temp_file = ".temp_code.py"
-    
-    if platform.system() == "Windows" and os.path.exists(temp_file):
-        set_hidden_file(temp_file)
-    
-    return temp_file
+    """Возвращает путь к временному файлу в системной папке TEMP."""
+    return os.path.join(tempfile.gettempdir(), "cat_ide_temp.py")
+
 
 def find_python():
     python = shutil.which("python")
@@ -49,35 +32,41 @@ def find_python():
 
     return sys.executable
 
+
 AUTO_SAVE_INTERVAL = 5
 auto_save_timer = None
 needs_saving = False
+
 
 def mark_dirty(event=None):
     global needs_saving
     needs_saving = True
 
+
 def auto_save():
     global auto_save_timer, needs_saving
-    
+
     if needs_saving:
         save()
         needs_saving = False
-    
+
     auto_save_timer = threading.Timer(AUTO_SAVE_INTERVAL, auto_save)
     auto_save_timer.daemon = True
     auto_save_timer.start()
 
+
 def save(event=None):
-    temp_file = get_temp_file_path()
-    
-    if hasattr(save, 'current_file') and save.current_file:
-        with open(save.current_file, "w", encoding="utf-8") as f:
-            f.write(text.get("1.0", ctk.END))
-    else:
-        with open(temp_file, "w", encoding="utf-8") as f:
-            f.write(text.get("1.0", ctk.END))
-        set_hidden_file(temp_file)
+    try:
+        if hasattr(save, 'current_file') and save.current_file:
+            with open(save.current_file, "w", encoding="utf-8") as f:
+                f.write(text.get("1.0", ctk.END))
+        else:
+            temp_file = get_temp_file_path()
+            with open(temp_file, "w", encoding="utf-8") as f:
+                f.write(text.get("1.0", ctk.END))
+    except PermissionError:
+        pass
+
 
 def open_file():
     file_path = filedialog.askopenfilename(
@@ -92,6 +81,7 @@ def open_file():
         save.current_file = file_path
         root.title(f"Cat IDE - {file_path}")
 
+
 def new_file():
     file_path = filedialog.asksaveasfilename(
         title="Создать новый .py файл",
@@ -105,6 +95,7 @@ def new_file():
         save.current_file = file_path
         root.title(f"Cat IDE - {file_path}")
         messagebox.showinfo("Успех", f"Создан файл: {file_path}")
+
 
 def run():
     save()
@@ -130,12 +121,14 @@ def run():
             f'x-terminal-emulator -e bash -c "{python} {file_to_run}; echo -n \'Done! Press Enter to exit...\'; read"',
             shell=True)
 
+
 def show_menu(event):
     menu = Menu(root, tearoff=0)
     menu.add_command(label="Создать новый .py файл", command=new_file)
     menu.add_separator()
     menu.add_command(label="Открыть .py файл", command=open_file)
     menu.post(event.x_root, event.y_root)
+
 
 def on_close():
     global auto_save_timer
@@ -145,11 +138,18 @@ def on_close():
         save()
     root.destroy()
 
+
 root = ctk.CTk()
 root.title("Cat IDE")
 root.geometry("1200x800")
 
-text = scrolledtext.ScrolledText(root, font=("Consolas", 12), bg="#1e1e1e", fg="white", insertbackground="white")
+text = scrolledtext.ScrolledText(
+    root,
+    font=("Consolas", 12),
+    bg="#1e1e1e",
+    fg="white",
+    insertbackground="white"
+)
 text.pack(fill=ctk.BOTH, expand=True)
 
 button_run = ctk.CTkButton(
