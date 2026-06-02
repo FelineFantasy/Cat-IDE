@@ -4,7 +4,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import threading
 from tkinter import Menu, filedialog, messagebox, scrolledtext
 
 import customtkinter as ctk
@@ -33,8 +32,7 @@ def find_python():
     return sys.executable
 
 
-AUTO_SAVE_INTERVAL = 5
-auto_save_timer = None
+AUTO_SAVE_INTERVAL = 5000
 needs_saving = False
 
 
@@ -44,26 +42,27 @@ def mark_dirty(event=None):
 
 
 def auto_save():
-    global auto_save_timer, needs_saving
+    """Безопасное автосохранение без использования threading.Timer."""
+    global needs_saving
 
     if needs_saving:
         save()
         needs_saving = False
 
-    auto_save_timer = threading.Timer(AUTO_SAVE_INTERVAL, auto_save)
-    auto_save_timer.daemon = True
-    auto_save_timer.start()
+    root.after(AUTO_SAVE_INTERVAL, auto_save)
 
 
 def save(event=None):
     try:
+        content = text.get("1.0", "end-1c")
+
         if hasattr(save, 'current_file') and save.current_file:
             with open(save.current_file, "w", encoding="utf-8") as f:
-                f.write(text.get("1.0", ctk.END))
+                f.write(content)
         else:
             temp_file = get_temp_file_path()
             with open(temp_file, "w", encoding="utf-8") as f:
-                f.write(text.get("1.0", ctk.END))
+                f.write(content)
     except PermissionError:
         pass
 
@@ -131,9 +130,6 @@ def show_menu(event):
 
 
 def on_close():
-    global auto_save_timer
-    if auto_save_timer:
-        auto_save_timer.cancel()
     if needs_saving:
         save()
     root.destroy()
@@ -171,9 +167,7 @@ root.bind("<Control-n>", lambda event: new_file())
 
 text.bind("<KeyRelease>", mark_dirty)
 
-auto_save_timer = threading.Timer(AUTO_SAVE_INTERVAL, auto_save)
-auto_save_timer.daemon = True
-auto_save_timer.start()
+root.after(AUTO_SAVE_INTERVAL, auto_save)
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
