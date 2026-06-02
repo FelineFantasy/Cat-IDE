@@ -80,7 +80,6 @@ def open_file():
         text.insert("1.0", content)
         save.current_file = file_path
         root.title(f"Cat IDE - {file_path}")
-        update_line_numbers()
 
 
 def new_file():
@@ -96,7 +95,6 @@ def new_file():
         save.current_file = file_path
         root.title(f"Cat IDE - {file_path}")
         messagebox.showinfo("Успех", f"Создан файл: {file_path}")
-        update_line_numbers()  # Обновляем нумерацию
 
 
 def run():
@@ -141,59 +139,18 @@ def on_close():
     root.destroy()
 
 
-def update_line_numbers(event=None):
-    """Обновляет нумерацию строк при изменении текста."""
-    lines = text.get("1.0", ctk.END).count('\n')
-
-    # Очищаем виджет нумерации
-    line_numbers.configure(state="normal")
-    line_numbers.delete("1.0", ctk.END)
-
-    # Вставляем номера строк
-    for i in range(1, lines + 1):
-        line_numbers.insert(f"{i}.0", f"{i}\n")
-
-    line_numbers.configure(state="disabled")
-
-
-def sync_scroll(*args):
-    """Синхронизирует прокрутку текста и нумерации."""
-    text.yview(*args)
-    line_numbers.yview(*args)
-
-
 root = ctk.CTk()
 root.title("Cat IDE")
 root.geometry("1200x800")
 
-frame = ctk.CTkFrame(root)
-frame.pack(fill=ctk.BOTH, expand=True)
-
-line_numbers = ctk.CTkTextbox(
-    frame,
-    width=50,
-    font=("Consolas", 12),
-    fg_color="#1e1e1e",
-    text_color="gray",
-    state="disabled"
-)
-line_numbers.pack(side=ctk.LEFT, fill=ctk.Y)
-
 text = scrolledtext.ScrolledText(
-    frame,
+    root,
     font=("Consolas", 12),
     bg="#1e1e1e",
     fg="white",
     insertbackground="white"
 )
-text.pack(side=ctk.LEFT, fill=ctk.BOTH, expand=True)
-
-text.bind("<KeyRelease>", lambda event: (mark_dirty(), update_line_numbers()))
-text.bind("<MouseWheel>", update_line_numbers)
-text.bind("<Button-1>", update_line_numbers)
-
-text.config(yscrollcommand=sync_scroll)
-line_numbers.config(yscrollcommand=sync_scroll)
+text.pack(fill=ctk.BOTH, expand=True)
 
 button_run = ctk.CTkButton(
     root,
@@ -212,6 +169,8 @@ root.bind("<F5>", lambda event: run())
 root.bind("<Control-s>", lambda event: save())
 root.bind("<Control-n>", lambda event: new_file())
 
+text.bind("<KeyRelease>", mark_dirty)
+
 auto_save_timer = threading.Timer(AUTO_SAVE_INTERVAL, auto_save)
 auto_save_timer.daemon = True
 auto_save_timer.start()
@@ -219,7 +178,5 @@ auto_save_timer.start()
 root.protocol("WM_DELETE_WINDOW", on_close)
 
 save.current_file = None
-
-update_line_numbers()
 
 root.mainloop()
