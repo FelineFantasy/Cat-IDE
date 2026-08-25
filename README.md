@@ -32,6 +32,19 @@ python cat_ide.py
 | **F5** | Run code |
 | **Ctrl+S** | Save file |
 
+## 💖 Support the Project
+
+If you enjoy **Cat IDE** and want to help keep the project alive, you can support me here:
+
+[![DonationAlerts](https://img.shields.io/badge/DonationAlerts-Support-blue.svg)](https://www.donationalerts.com/r/felinefantasy)
+
+Your support helps me:
+- 🖥️ Keep improving Cat IDE
+- 🐱 Develop more open-source tools
+- ☕ Stay awake while coding at 4 AM
+
+Every little bit is appreciated! ❤️
+
 ## 👤 Author
 - **FelineFantasy**
 - **License**: MIT
