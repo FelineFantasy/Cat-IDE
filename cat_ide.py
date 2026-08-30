@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Simple Python IDE with auto-save, run, and context menu.
+"""
+
 import os
 import platform
 import shutil
