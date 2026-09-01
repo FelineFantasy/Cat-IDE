@@ -3,14 +3,7 @@ name: 🖥️ Cat IDE CI
 on:
   push:
     branches: [ "main" ]
-    tags:
-      - 'v[0-9]*'
-  pull_request:
-    branches: [ "main" ]
-    paths:
-      - 'cat-ide.py'
-      - '.github/workflows/*.yml'
-
+  workflow_dispatch:
 
 jobs:
   syntax-check:
@@ -69,10 +62,15 @@ jobs:
           echo "ASSET_NAME=Cat_IDE_Linux" >> $GITHUB_ENV
         fi
 
-    - name: Загружаем результат в Релиз
+    - name: Создаем/обновляем релиз
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.ref_name }}
+        tag_name: latest
+        name: "Cat IDE Latest"
         files: dist/*
+        draft: false
+        prerelease: false
+        allow_updates: true
+        body: "Автоматическая сборка от $(date +'%Y-%m-%d %H:%M:%S')"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
