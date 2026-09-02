@@ -71,6 +71,6 @@ jobs:
         draft: false
         prerelease: false
         allow_updates: true
-        body: "Automatic build from $(date +'%Y-%m-%d %H:%M:%S')"
+        body: Automatic build from ${{ github.event.head_commit.timestamp }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
