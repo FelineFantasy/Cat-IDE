@@ -67,6 +67,7 @@ jobs:
       with:
         tag_name: latest
         name: "Cat IDE Latest"
+        target_commitish: main
         files: dist/*
         draft: false
         prerelease: false
