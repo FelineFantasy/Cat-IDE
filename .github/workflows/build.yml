@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   syntax-check:
     strategy:
@@ -61,6 +64,13 @@ jobs:
           pyinstaller --onefile --noconsole --name "Cat_IDE_Linux" src/main.py
           echo "ASSET_NAME=Cat_IDE_Linux" >> $GITHUB_ENV
         fi
+
+    - name: Удаляем старый тег latest
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@://github.com"
+        git tag -d latest || true
+        git push --delete origin latest || true
 
     - name: Создаем/обновляем релиз
       uses: softprops/action-gh-release@v2
