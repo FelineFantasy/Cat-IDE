@@ -9,7 +9,7 @@ Cat IDE is a lightweight code editor with dark theme. Press F5 or click ▶ to e
 ### Features:
 - 🎨 Dark theme
 - ⌨️ F5 to run, Ctrl+S to save
-- 📦 Single file — `cat_ide.py`
+- 📦 Single file — `src/main.py`
 - 🐱 Zero bloat
 
 ## ⚙️ Installation
@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ## 🎮 Usage
 
 ```bash
-python cat_ide.py
+python src/main.py
 ```
 
 ## 📦 Hotkeys
